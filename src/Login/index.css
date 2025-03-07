@@ -1,0 +1,35 @@
+body{
+    background-image: url("../../asset/background.jpg");
+    background-repeat: no-repeat;
+}
+
+.form{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    /* width: 500px;
+    height: 600px; */
+    /* background-color: aqua; */
+    /* opacity: 0.5; */
+    /* margin-top: 200px; */
+    opacity: 0.8;
+    margin-left: 300px;
+    margin-top: 100px;
+    flex-direction: column;
+    text-align: left;
+}
+
+.label{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0.5;
+    font-size: 60px;
+    color: #19b0cf;
+    margin-left: 500px;
+    margin-top:150px ;
+    
+    /* margin-bottom: ; */
+    /* gap: 50px; */
+
+}

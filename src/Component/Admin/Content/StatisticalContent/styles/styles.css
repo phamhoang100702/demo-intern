@@ -1,0 +1,44 @@
+.chart-area{
+    display: flex;
+    flex-direction: row;
+    gap: 20px;
+    padding: 16px;
+    margin-left: 8px;
+}
+
+.wrapper{
+    display: flex;
+    flex-direction: column;
+}
+
+
+
+
+.list-area{
+    display: flex;
+    flex-direction: row;
+    gap: 20px;
+    justify-content: space-around;
+    /* font-size: 3; */
+}
+
+.singer-list{
+    width: 20%;
+    padding: 5px;
+    margin-left: 30px ;
+    margin-top: 30px;
+
+}
+
+.song-list{
+    margin-top: 30px;
+    width: 30%;
+    padding: 5px;
+
+}
+
+.left-list{
+    margin-top: 30px;
+    width: 50%;
+    padding: 5px;
+}
