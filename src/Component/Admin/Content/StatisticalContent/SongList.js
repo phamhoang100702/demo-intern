@@ -1,12 +1,6 @@
 import React, {useEffect, useState} from "react";
 import {Avatar, List} from "antd";
-import {getTopSinger} from "../../../../services/api/singer";
-import {
-    countClickAll,
-    countClickByDay,
-    countClickByMonth,
-    countClickByWeek,
-} from "../../../../services/api/click";
+import {countClickAll, countClickByDay, countClickByMonth, countClickByWeek,} from "../../../../services/api/click";
 
 const SongList = ({time}) => {
     const [dataSource, setDataSource] = useState([]);
@@ -43,7 +37,7 @@ const SongList = ({time}) => {
                         avatar={
                             <>
                                 {item.thumbnail ? (
-                                    <Avatar src={item.thumbnail}/>
+                                    <Avatar src={item.thumbnail} size={"large"}/>
                                 ) : (
                                     <Avatar
                                         src={`https://xsgames.co/randomusers/avatar.php?g=pixel&key=2`}

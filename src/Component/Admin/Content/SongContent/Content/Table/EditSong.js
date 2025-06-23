@@ -4,13 +4,15 @@ import React, { useEffect, useRef, useState } from "react";
 import { Form, Input, Row, Col, Select, Space } from "antd";
 import AudioPlayer from "react-h5-audio-player";
 import "react-h5-audio-player/lib/styles.css";
-import { getAllSinger } from "../../../../../../services/api/singer";
 import { getAllCategory } from "../../../../../../services/api/category";
 import {
-  updateSong,
+  updateSong, updateSongWithFormData,
   uploadFileSound,
 } from "../../../../../../services/api/song";
 import { editSong } from "../../../../../../redux/actions/admin/song";
+import {searchSinger} from "../../../../../../services/api/singer";
+import {moods} from "../../../../../../constants/moods";
+import {genres} from "../../../../../../constants/genres";
 
 const validateMessages = {};
 
@@ -22,26 +24,17 @@ const handleSinger = (singers) => {
     } else {
       arr1 = singer.split(";");
     }
-    return {
-      id: arr1[1],
-    };
+    return arr1[1];
   });
   return arr;
 };
 
 const handleCategory = (categories) => {
-  const arr = categories.map((category) => {
-    let arr1;
-    if (category.value) {
-      arr1 = category.value.split(";");
-    } else {
-      arr1 = category.split(";");
-    }
-    return {
-      id: arr1[1],
-    };
-  });
-  return arr;
+  return categories.join(',');
+};
+
+const handleMoods = (moods) => {
+  return moods.join(',');
 };
 
 const EditSong = ({ record }) => {
@@ -70,38 +63,41 @@ const EditSong = ({ record }) => {
   const onFinish = (values) => {
     // console.log("edit");
     // console.log(values);
+    console.log(values)
     const updateSongData = async () => {
-      let songUpdate;
-      const singers = handleSinger(values.song.singers);
-      const categories = handleCategory(values.song.categories);
-      songUpdate = {
-        ...values.song,
-        singers: singers,
-        categories: categories,
-        id: song_edit.id,
-        fileSound: song_edit.fileSound,
-      };
-
-      if (checked) {
+      try{
+        let songUpdate;
         let formData = new FormData();
-        formData.append("sound", files["sound"]);
-        const data = await uploadFileSound(formData);
-        const url = data.content.sound;
+        if(checked){
+          if (values.sound || values.lyric || values.thumbnail) {
+            if (files["sound"]) formData.append("sound", files["sound"]);
+            if (values.lyric) formData.append("lyric", values.lyric.file);
+            if (values.thumbnail) formData.append("thumbnail", values.thumbnail[0].originFileObj);
+          }
+        }
+        const singers = handleSinger(values.song.singers);
         songUpdate = {
-          ...songUpdate,
-          fileSound: url,
+          ...values.song,
+          singers: singers,
+          genres: handleCategory(values.song.genres),
+          id: song_edit.id,
+          moods: handleMoods(values.song.moods),
+          visible: values.visible,
         };
-        // console.log("accept");
-        // console.log(songUpdate);
+        console.log('songUpdate',songUpdate)
+        formData.append("song", new Blob([JSON.stringify(songUpdate)], {type: "application/json"}));
+
+        const nData = await updateSongWithFormData(formData);
+        if (nData.status == "ok") {
+          dispatch(editSong(nData.content));
+          setOpen(false);
+        } else {
+          alert(nData.message);
+        }
+      }catch (e){
+        console.log(e);
       }
 
-      const nData = await updateSong(songUpdate);
-      if (nData.status == "ok") {
-        dispatch(editSong(nData.content));
-        setOpen(false);
-      } else {
-        alert(nData.message);
-      }
     };
     updateSongData();
   };
@@ -124,45 +120,27 @@ const EditSong = ({ record }) => {
     }
   };
 
-  const onChangeLyric = (e) => {
-    const file = e.target.files[0];
-    // console.log("change ");
-    if (file && file.name.endsWith(".mp3")) {
-      // Assuming setSource is a function to set the source of your audio element
-      let file1 = URL.createObjectURL(file);
 
-      setFiles((pre) => {
-        return {
-          ...pre,
-          sound: file,
-        };
-      });
-      setSource(file1);
-      setChecked(true);
-    }
-  };
 
   useEffect(() => {
-    setSource(song_edit.fileSound);
+    setSource(song_edit.sound);
     const fetchApi = async () => {
-      const optSinger = await getAllSinger();
-      const optionCategory = await getAllCategory();
+      const optSinger = await searchSinger();
+      const optionCategory = genres;
       let dt = optSinger.content;
-      let dt1 = optionCategory.content;
+      let dt1 = optionCategory;
       const opt1 = dt.map((singer) => {
         return {
-          value: singer.nickName + ";" + singer.id,
-          label: singer.nickName,
+          value: singer.name + ";" + singer.id,
+          label: singer.name,
           key: singer.id,
-          desc: singer.nickName + "(" + singer.name + ")",
+          desc: singer.name,
         };
       });
       const opt2 = dt1.map((category) => {
         return {
-          value: category.name + ";" + category.id,
-          label: category.name,
-          key: category.id,
-          desc: category.name,
+          value: category.value,
+          label: category.label,
         };
       });
 
@@ -172,27 +150,31 @@ const EditSong = ({ record }) => {
     fetchApi();
     form.setFieldsValue({
       song: {
-        name: song_edit.name,
-        status: song_edit.status,
+        title: song_edit.title,
+        visible: song_edit.visible,
         singers: song_edit.singers.map((singer) => {
           return {
-            value: singer.nickName + ";" + singer.id,
-            label: singer.nickName,
+            value: singer.name + ";" + singer.id,
+            label: singer.name,
             key: singer.id,
-            desc: singer.nickName + "(" + singer.name + ")",
+            desc: singer.name,
           };
         }),
-        categories: song_edit.categories.map((category) => {
+        genres: song_edit.genres.split(',').map((category) => {
           return {
-            value: category.name + ";" + category.id,
-            label: category.name,
-            key: category.id,
-            desc: category.name,
+            value: category,
+            label: category
+          };
+        }),
+        moods: song_edit.moods.split(',').map((mood) => {
+          return {
+            value: mood,
+            label: mood,
           };
         }),
       },
     });
-    
+
   }, [record]);
   return (
     <>
@@ -213,60 +195,57 @@ const EditSong = ({ record }) => {
           onFinish={onFinish}
           validateMessages={validateMessages}
           layout="vertical"
-          // initialValues={{
-          //   song: {
-          //     name: song_edit.name,
-          //     status: song_edit.status,
-          //     singers: song_edit.singers.map((singer) => {
-          //       return {
-          //         value: singer.nickName + ";" + singer.id,
-          //         label: singer.nickName,
-          //         key: singer.id,
-          //         desc: singer.nickName + "(" + singer.name + ")",
-          //       };
-          //     }),
-          //     categories: song_edit.categories.map((category) => {
-          //       return {
-          //         value: category.name + ";" + category.id,
-          //         label: category.name,
-          //         key: category.id,
-          //         desc: category.name,
-          //       };
-          //     }),
-          //   },
-          // }}
+          initialValues={{
+            song: {
+              title: song_edit.title,
+              visible: song_edit.visible,
+              singers: song_edit.singers.map((singer) => ({
+                value: `${singer.name};${singer.id}`,
+                label: singer.name,
+                key: singer.id,
+                desc: singer.name, // Đã bỏ đoạn comment + "(" + singer.name + ")"
+              })),
+              genres: song_edit.genres.split(',').map((genre) => ({
+                value: genre,
+                label: genre,
+                key: genre,
+              })),
+              moods: song_edit.moods.split(',').map((mood) => ({
+                value: mood,
+                label: mood,
+                key: mood,
+              })),
+            },
+          }}
+
         >
           <Row gutter={16}>
             <Col span={12}>
               <Form.Item
-                name={["song", "name"]}
-                label="Name"
+                name={["song", "title"]}
+                label="Tên bài hát"
                 rules={[
                   {
                     required: true,
                   },
                 ]}
               >
-                <Input width="100%" disabled={true} />
+                <Input width="100%" disabled={false} />
               </Form.Item>
             </Col>
             <Col span={12}>
-              <Form.Item name={["song", "status"]} label="Status">
+              <Form.Item name={["song", "visible"]} label="Trạng thái">
                 <Select
                   width="100%"
                   options={[
                     {
-                      label: "Public",
-                      value: 2,
+                      label: "Công khai",
+                      value: true,
                     },
                     {
-                      label: "Private",
-                      value: 0,
-                    },
-                    {
-                      label: "Pending",
-                      value: 1,
-                    },
+                      label: "Riêng tư",
+                      value: false,
+                    }
                   ]}
                 />
               </Form.Item>
@@ -276,7 +255,7 @@ const EditSong = ({ record }) => {
             <Col span={24}>
               <Form.Item
                 name={["song", "singers"]}
-                label="Singer"
+                label="Ca sĩ"
                 rules={[
                   {
                     required: false,
@@ -292,9 +271,8 @@ const EditSong = ({ record }) => {
                   optionRender={(option) => (
                     <Space>
                       <span role="img" aria-label={option.data.label}>
-                        {option.data.emoji}
+                        {option.data.label}
                       </span>
-                      {option.data.desc}
                     </Space>
                   )}
                 />
@@ -303,46 +281,67 @@ const EditSong = ({ record }) => {
           </Row>
           <Row gutter={16}>
             <Col span={12}>
-              <Form.Item name={["song", "categories"]} label="Categories">
+              <Form.Item name={["song", "genres"]} label="Thể loại">
                 <Select
-                  disabled={true}
+                  disabled={false}
                   mode="multiple"
                   style={{
                     width: "100%",
                   }}
-                  placeholder="select category"
+                  placeholder="Chọn thể loại bài hát"
                   optionLabelProp="label"
                   options={optionCategory}
                   optionRender={(option) => (
                     <Space>
                       <span role="img" aria-label={option.data.label}>
-                        {option.data.emoji}
+                        {option.data.label}
                       </span>
-                      {option.data.desc}
                     </Space>
                   )}
                 />
               </Form.Item>
             </Col>
-            {/* <Col span={12}>
-              <Form.Item name={["song", "fileSound"]} label="Modifed File">
-                <Input
-                  type="file"
-                  title="Modified file"
-                  onChange={onChangeMp3}
-                  ref={audioRef}
+            <Col span={12}>
+              <Form.Item name={["song", "moods"]} label="Tags">
+                <Select
+                    disabled={false}
+                    mode="multiple"
+                    style={{
+                      width: "100%",
+                    }}
+                    placeholder="Chọn tags cho bài hát"
+                    optionLabelProp="label"
+                    options={moods}
+                    optionRender={(option) => (
+                        <Space>
+                          <span role="img" aria-label={option.data.label}>
+                            {option.data.label}
+                          </span>
+                        </Space>
+                    )}
                 />
               </Form.Item>
-            </Col> */}
+            </Col>
           </Row>
           <Row gutter={16}>
             <Col span={24}>
               <Form.Item>
-                <AudioPlayer src={source} autoPlay={false} volume={0.5} />
+                <AudioPlayer src={source} autoPlay={true} volume={0.5} />
               </Form.Item>
             </Col>
           </Row>
-
+          <Row gutter={16}>
+            <Col span={18}>
+              <Form.Item name={["song", "fileSound"]} label="Sửa file mp3">
+                <Input
+                    type="file"
+                    title="Sửa file mp3 "
+                    onChange={onChangeMp3}
+                    ref={audioRef}
+                />
+              </Form.Item>
+            </Col>
+          </Row>
           <Form.Item>
             <Button type="primary" htmlType="submit">
               Submit

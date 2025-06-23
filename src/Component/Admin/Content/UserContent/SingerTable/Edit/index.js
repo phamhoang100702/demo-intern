@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Button, Form, Input, Row, Drawer, Col, Select } from "antd";
 import "react-h5-audio-player/lib/styles.css";
 import Password from "antd/es/input/Password";
-import { updateSinger } from "../../../../../services/api/singer";
+import {updateSinger} from "../../../../../../services/api/singer";
 
 /* eslint-disable no-template-curly-in-string */
 const validateMessages = {
@@ -14,7 +14,7 @@ const validateMessages = {
 };
 /* eslint-enable no-template-curly-in-string */
 
-const FormEdit = ({ record }) => {
+const SingerEditForm = ({ record }) => {
   const [open, setOpen] = useState(false);
   const [form] = Form.useForm();
   const [disabled, setDisabled] = useState(true);
@@ -100,7 +100,7 @@ const FormEdit = ({ record }) => {
             </Col>
             <Col span={12}>
               <Form.Item name={["singer", "status"]} label="Status">
-                <Select 
+                <Select
                   width="100%"
                   options={[
                     {
@@ -179,4 +179,4 @@ const FormEdit = ({ record }) => {
     </>
   );
 };
-export default FormEdit;
+export default SingerEditForm;

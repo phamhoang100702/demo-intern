@@ -1,10 +1,11 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Button, Form, Input, Row, Col, Select, message, notification } from "antd";
 import "react-h5-audio-player/lib/styles.css";
 import Password from "antd/es/input/Password";
+import {uploadAvatar} from "../../../../../../services/api/singer";
+import {registerSinger} from "../../../../../../services/api/auth";
 
-import { addSinger, uploadAvatar } from "../../../../../services/api/singer";
-import { registerSinger } from "../../../../../services/api/auth";
+
 /* eslint-disable no-template-curly-in-string */
 const validateMessages = {
   required: "${label} is required!",
@@ -15,13 +16,13 @@ const validateMessages = {
 };
 /* eslint-enable no-template-curly-in-string */
 
-const FormAdd = ({ handleAdd, onClose }) => {
+const SingerAddForm = ({ handleAdd, onClose }) => {
   const [form] = Form.useForm();
   const [files,setFiles] = useState({});
   const [api,contextHodler] = notification.useNotification();
   const onFinish = (values) => {
     let form1 = new FormData();
- 
+
     form1.append("avatar", files["avatar"]);
     // let songSubmi
     // console.log(values.singer);
@@ -52,13 +53,13 @@ const FormAdd = ({ handleAdd, onClose }) => {
         }
         // console.log(newSinger)
       }
-      
+
       const newUser = await registerSinger(newSinger);
       if(newUser.status == 'ok'){
         // console.log(newUser);
         handleAdd(newUser.content);
       }
-      
+
     })();
     form.setFieldsValue({
       singer: {
@@ -71,7 +72,7 @@ const FormAdd = ({ handleAdd, onClose }) => {
         socialMediaLink: "",
       },
     });
-    
+
     onClose();
   };
 
@@ -199,4 +200,4 @@ const FormAdd = ({ handleAdd, onClose }) => {
     </Form>
   );
 };
-export default FormAdd;
+export default SingerAddForm;

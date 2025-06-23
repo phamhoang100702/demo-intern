@@ -1,64 +1,59 @@
-import { del, get, post, put ,uploadFile} from "../../utils";
+import {del, get, post, put, uploadFile} from "../../utils";
 
-const PRE_ADMIN = "admin/"
+const PRE_ADMIN = "admin/user-service"
 
-export const getSingerByNameAndNickName = async (name="",nickName="") => {
-  return await get(`singer?name=${name}`);
+export const searchSinger = async (keyword = '', page = 0, size = 10) => {
+    return await get(`${PRE_ADMIN}/singer?keyword=${keyword}&page=${page}&size=${size}`);
 };
 
-export const addSinger = async(object)=>{
-  return await post(`singer`,object)
+export const addSinger = async (object) => {
+    return await post(`singer`, object)
 }
 
-export const getSingerById = async(userId,object)=>{
-  return await post(`singer/${userId}`,object)
+export const getSingerById = async (userId, object) => {
+    return await post(`singer/${userId}`, object)
 }
 
-export const updateSinger = async(object= {}) => {
-  return await put("singer",object)
+export const updateSinger = async (object = {}) => {
+    return await put("singer", object)
 };
 
-export const deleteSingerById = async(id) => {
-  return await del(`singer/${id}`)
+export const deleteSingerById = async (id) => {
+    return await del(`singer/${id}`)
 };
 
-export const getAllSinger =async ()=>{
+export const getAllSinger = async () => {
     return await get("singer");
 }
 
 
-export const getAllSongBySingerId =async (singerId)=>{
-  return await get(`singer/${singerId}/song`)
+export const getAllSongBySingerId = async (singerId) => {
+    return await get(`singer/${singerId}/song`)
 }
 
-export const getAllActiveSinger = async (name)=>{
-  const status = true;
-  return await get(`singer?status=${status}&name=${name}`)
+export const getAllActiveSinger = async (name) => {
+    const status = true;
+    return await get(`singer?status=${status}&name=${name}`)
 }
 
-export const getAllUnActiveSinger = async (name)=>{
-  const status = false;
-  return await get(`singer?status=${status}&name=${name}`)
+export const getAllUnActiveSinger = async (name) => {
+    const status = false;
+    return await get(`singer?status=${status}&name=${name}`)
 }
 
-export const getAlbumBySingerId = async(singerId)=>{
-  return await get(`singer/${singerId}/album`)
+export const getAlbumBySingerId = async (singerId) => {
+    return await get(`singer/${singerId}/album`)
 }
 
 
-export const uploadAvatar = async (formData) =>{
-  return await uploadFile("s3/avatar",formData)
+export const uploadAvatar = async (formData) => {
+    return await uploadFile("s3/avatar", formData)
 }
 // top singer
-export const getTopSinger = async(top)=>{
-  return await get(`${PRE_ADMIN}/top-singer/${top}`)
+export const getTopSinger = async (top) => {
+    return await get(`${PRE_ADMIN}/singer/top-singer/${top}`)
 }
-
-export const getTotalSinger = async()=>{
-  return await get(`singer/count`)
-}
-
-export const getListFollower = async(id)=>{
-  return await get(`singer/${id}/follower`)
+export const getListFollower = async (id) => {
+    return await get(`singer/${id}/follower`)
 }
 

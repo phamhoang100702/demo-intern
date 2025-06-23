@@ -18,24 +18,30 @@ const ListSong = () => {
 
   useEffect(() => {
     fetchRecords(1, pageSize);
-  }, [search]);
+  }, [search,totalPages,pageSize]);
 
-  const fetchRecords = (page = 1, pageSize = 10) => {
+  const fetchRecords = (page = 0, pageSize = 10) => {
     const name = search;
     setLoading(true);
     async function fetch(name, page, pageSize) {
-      const object = await getSongPage(name, page, pageSize);
-      const listSong = object.content;
-      let data1 = listSong.content.map((item, index) => {
-        return {
-          ...item,
-          key: index + 1,
-        };
-      });
+      try{
+        const object = await getSongPage(name, page, pageSize);
+        const listSong = object.content;
+        console.log("list song",listSong)
+        let data1 = listSong.map((item, index) => {
+          return {
+            ...item,
+            key: index + 1,
+          };
+        });
         dispatch(setListSong(data1))
         setPageSize(listSong.size);
-        setTotalPages(listSong.totalPages * pageSize);      
-      setLoading(false)
+        setTotalPages(object.count);
+        setLoading(false)
+      }catch (e){
+        setLoading(false)
+      }
+
     }
     fetch(name, page, pageSize);
 
@@ -43,7 +49,8 @@ const ListSong = () => {
 
   return (
     <Card
-      title="All Song"
+      title="
+      Quản lý bài hát "
       bordered={false}
       style={{
         marginTop: "5px",

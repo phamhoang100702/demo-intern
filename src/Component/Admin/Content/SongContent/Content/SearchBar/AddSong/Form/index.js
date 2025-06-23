@@ -4,10 +4,11 @@ import AudioPlayer from "react-h5-audio-player";
 import "react-h5-audio-player/lib/styles.css";
 
 import { getAllCategory } from "../../../../../../../../services/api/category";
-import { getAllSinger } from "../../../../../../../../services/api/singer";
-import { uploadFileSound,saveSong, getSongById } from "../../../../../../../../services/api/song";
+import {getAllSinger, searchSinger} from "../../../../../../../../services/api/singer";
+import {uploadFileSound, saveSong, getSongById, saveSongWithFormData} from "../../../../../../../../services/api/song";
 import { useDispatch } from "react-redux";
 import { addSong } from "../../../../../../../../redux/actions/admin/song";
+import {moods} from "../../../../../../../../constants/moods";
 /* eslint-disable no-template-curly-in-string */
 const validateMessages = {
   required: "${label} is required!",
@@ -22,21 +23,18 @@ const handleSinger = (singers)=>{
   // console.log(singers)
   const arr = singers.map((singer)=>{
     const arr1 = singer.split(";");
-    return {
-      "id" : arr1[1]
-    }
+    return  arr1[1];
   })
   return arr;
 }
 
-const handleCategory = (categories)=>{
-  const arr = categories.map((category)=>{
-    const arr1 = category.split(";");
-    return {
-      "id" : arr1[1]
-    }
-  })
-  return arr;
+const handleGenres = (genres)=>{
+  console.log(genres);
+  return genres.join(',');
+}
+
+const handleMoods = (moods)=>{
+  return moods.join(',');
 }
 
 const AddForm = ({ onSubmit }) => {
@@ -51,48 +49,57 @@ const AddForm = ({ onSubmit }) => {
   const [form] = Form.useForm();
   const dispatch = useDispatch();
 
-
   const onFinish = (values) => {
     // let songSubmi
-    let form1 = new FormData();
-    form1.append("sound", files["sound"]);
-    form1.append("lyric", files["lyric"]);
-    form1.append("avatar", files["avatar"]);
-    const saveSongData = async () => {
-      const object = await uploadFileSound(form1);
-      let ct = object.content;
-      const singers = handleSinger(values.song.singers);
-      const categories = handleCategory(values.song.categories);
-      const newSong = {
-        ...values.song,
-        'fileSound' : ct.sound,
-        'fileLyric' : ct.lyric,
-        'avatar' : ct.avatar,
-        'singers' : singers,
-        'categories' : categories
+    try{
+      let form1 = new FormData();
+      if(!files["sound"]) {
+        alert("Bạn phải thêm file âm thanh");
+        return;
       }
-      const obj = await saveSong(newSong);
+      form1.append("sound", files["sound"]);
+      if(files["lyric"]) form1.append("lyric", files["lyric"]);
+      if(files["avatar"]) form1.append("thumbnail", files["avatar"]);
+      const saveSongData = async () => {
+        const singers = handleSinger( values.song.singers);
+        console.log(values);
+        const newSong = {
+          title: values.song.title,
+          singers : singers,
+          visible: values.song.visible,
+          genres: handleGenres(values.song.genres),
+          moods : handleMoods(values.song.moods)
+        }
+        console.log('newsong', newSong)
+        form1.append("song", new Blob([JSON.stringify(newSong)], {type: "application/json"}));
+        console.log('new song', newSong)
+        console.log('form', form1)
+        const obj = await saveSongWithFormData(form1);
 
-      const objToTable = await getSongById(obj.content.id)
-      dispatch(addSong(objToTable.content))
-    };
+        dispatch(addSong(obj.content))
+      };
 
-    saveSongData();
+      saveSongData();
 
-    onSubmit();
+      onSubmit();
 
-    form.setFieldsValue({
-      song: {
-        name: "",
-        categories: [],
-        singers: [],
-        fileLyric: "",
-        fileSound: "",
-        avatar: "",
-        status: false,
-      },
-    });
-    setSource("");
+      form.setFieldsValue({
+        song: {
+          title: "",
+          genres: [],
+          singers: [],
+          lyric: "",
+          sound: "",
+          thumbnail: "",
+          moods: [],
+          visible: false,
+        },
+      });
+      setSource("");
+    }catch ( e){
+
+    }
+
   };
   // api
 
@@ -151,10 +158,8 @@ const AddForm = ({ onSubmit }) => {
 
   useEffect(() => {
     async function fetch_category() {
-      const object = await getAllCategory();
-      const arr1 = object.content;
-      setListCategory(arr1);
-      const object1 = await getAllSinger();
+      setListCategory(['rap','pop','hip-hop']);
+      const object1 = await searchSinger();
       const arr2 = object1.content;
       setListSinger(arr2);
     }
@@ -165,10 +170,10 @@ const AddForm = ({ onSubmit }) => {
     // console.log(listSinger);
     const data = listSinger.map((singer) => {
       return {
-        value: singer.nickName + ";" + singer.id,
-        label: singer.nickName,
+        value: singer.name + ";" + singer.id,
+        label: singer.name,
         key: singer.id,
-        desc: singer.nickName + "(" + singer.name + ")",
+        desc: singer.name ,
       };
     });
     // console.log(data);
@@ -178,8 +183,8 @@ const AddForm = ({ onSubmit }) => {
   useEffect(() => {
     const data = listCategory.map((category) => {
       return {
-        value: category.id,
-        label: category.name
+        value: category,
+        label: category
       };
     });
     // console.log(data);
@@ -195,21 +200,22 @@ const AddForm = ({ onSubmit }) => {
       layout="vertical"
       initialValues={{
         song: {
-          name: "",
-          categories: [],
+          title: "",
+          genres: [],
           singers: [],
-          fileLyric: "",
-          fileSound: "",
-          avatar: "",
-          status: false,
+          moods: [],
+          lyric: "",
+          sound: "",
+          thumbnail: "",
+          visible: false,
         },
       }}
     >
       <Row gutter={16}>
         <Col span={12}>
           <Form.Item
-            name={["song", "name"]}
-            label="Name"
+            name={["song", "title"]}
+            label="Tên bài hát"
             rules={[
               {
                 required: true,
@@ -220,21 +226,17 @@ const AddForm = ({ onSubmit }) => {
           </Form.Item>
         </Col>
         <Col span={12}>
-          <Form.Item name={["song", "status"]} label="Status">
+          <Form.Item name={["song", "visible"]} label="Trạng thái">
             <Select
               width="100%"
               options={[
                 {
-                  label: "Public",
-                  value: 2,
+                  label: "Công khai",
+                  value: true,
                 },
                 {
-                  label: "Private",
-                  value: 0,
-                },
-                {
-                  label:"Pending",
-                  value:1
+                  label: "Riêng tư",
+                  value: false,
                 }
               ]}
             />
@@ -242,10 +244,10 @@ const AddForm = ({ onSubmit }) => {
         </Col>
       </Row>
       <Row gutter={16}>
-        <Col span={24}>
+        <Col span={12}>
           <Form.Item
             name={["song", "singers"]}
-            label="Singer"
+            label="Ca sĩ"
             rules={[
               {
                 required: false,
@@ -268,29 +270,49 @@ const AddForm = ({ onSubmit }) => {
             />
           </Form.Item>
         </Col>
+        <Col span={12}>
+          <Form.Item name={["song", "moods"]} label="Tags">
+            <Select
+                mode="multiple"
+                style={{
+                  width: "100%",
+                }}
+                placeholder="Chọn tags"
+                optionLabelProp="label"
+                options={moods}
+                optionRender={(option) => (
+                    <Space>
+                  <span role="img" aria-label={option.data.label}>
+                    {option.data.label}
+                  </span>
+                    </Space>
+                )}
+            />
+          </Form.Item>
+        </Col>
+
       </Row>
       <Row gutter={16}>
         <Col span={12}>
-          <Form.Item name={["song", "avatar"]} label={"Avatar"}>
+          <Form.Item name={["song", "thumbnail"]} label={"Ảnh"}>
             <Input type="file" onChange={onChangeImg} id="fileAvatar"></Input>
           </Form.Item>
         </Col>
         <Col span={12}>
-          <Form.Item name={["song", "categories"]} label="category">
+          <Form.Item name={["song", "genres"]} label="Thể loại">
             <Select
               mode="multiple"
               style={{
                 width: "100%",
               }}
-              placeholder="select category"
+              placeholder="Chọn thể loại"
               optionLabelProp="label"
               options={optionCategory}
               optionRender={(option) => (
                 <Space>
                   <span role="img" aria-label={option.data.label}>
-                    {option.data.emoji}
+                    {option.data.label}
                   </span>
-                  {option.data.desc}
                 </Space>
               )}
             />
@@ -300,7 +322,7 @@ const AddForm = ({ onSubmit }) => {
 
       <Row gutter={16} content="center">
         <Col span={12}>
-          <Form.Item name={["song", "fileSound"]} label={"Sound"}>
+          <Form.Item name={["song", "sound"]} label={"File âm thanh"}>
             <Input
               type="file"
               accept=".mp3"
@@ -310,7 +332,7 @@ const AddForm = ({ onSubmit }) => {
           </Form.Item>
         </Col>
         <Col span={12}>
-          <Form.Item name={["song", "fileLyric"]} label={"Lyric"}>
+          <Form.Item name={["song", "lyric"]} label={"Lời nhạc"}>
             <Input
               type="file"
               accept=".lrc"

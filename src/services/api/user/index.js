@@ -1,8 +1,17 @@
 import {get,put,post,del} from "../../utils"
 
-const PRE_ADMIN = "admin/"
+const PRE_ADMIN = "admin/user-service"
 
-export const searchAllUser = async(keyword="",page= null,size= null) => {
+
+export const getNewUser = async () => {
+    return await get(`${PRE_ADMIN}/user/new-users`)
+}
+
+export const getUserCount = async () => {
+    return await get(`${PRE_ADMIN}/user/count-number`)
+}
+
+export const searchAllUser = async(keyword="",page= 0,size= 10) => {
     return await get(`${PRE_ADMIN}/user?keyword=${keyword}&page=${page}&size=${size}`);
 }
 
@@ -25,7 +34,5 @@ export const getTotalUser = async()=>{
     return await get(`${PRE_ADMIN}/user/count`)
 }
 export const getUserInformation = async (token) => {
-    return await post(`${PRE_ADMIN}/user/information`, {
-        token: token
-    })
+    return await post(`${PRE_ADMIN}/user/information`)
 }

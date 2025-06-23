@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Button, Form, Input, Row, Drawer } from "antd";
 import "react-h5-audio-player/lib/styles.css";
 import Password from "antd/es/input/Password";
-import { updateUser } from "../../../../../services/api/user";
+import { updateUser } from "../../../../../../services/api/user";
 
 /* eslint-disable no-template-curly-in-string */
 const validateMessages = {
@@ -45,7 +45,7 @@ const FormEdit = ({ record }) => {
       record.onEdit();
     })();
     onClose();
-    
+
   };
   // api
   useEffect(()=>{

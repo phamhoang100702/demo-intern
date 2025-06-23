@@ -11,7 +11,7 @@ const ButtonHandleDelete = ({ record }) => {
       const dt = await deleteSongById(record.id);
     };
     del();
-    
+
     dispatch(deleteSong(record.id));
   };
   return (
@@ -28,40 +28,37 @@ const columns = [
     key: "key",
   },
   {
-    title: "Name",
-    dataIndex: "name",
-    key: "name",
+    title: "Tên bài hát",
+    dataIndex: "title",
+    key: "title",
     render: (text) => <a>{text}</a>,
   },
   {
-    title: "Singer",
+    title: "Ca sĩ ",
     dataIndex: "singers",
     key: "singers",
     render: (_, { singers }) => {
       return singers.map((singer, index) => {
-        return <Tag key={index}>{singer.nickName}</Tag>;
+        return <Tag key={index}>{singer.name}</Tag>;
       });
     },
     width : '20%'
   },
   {
-    title: "Status",
-    dataIndex: "status",
-    key: "status",
-    render: (_, { status }) => {
+    title: "Trạng thái",
+    dataIndex: "visible",
+    key: "visible",
+    render: (_, { visible }) => {
       let color,value;
-      if(status==0){
-        color = "red"
-        value ="PRIVATE"
+      if(visible){
+        color = "blue"
+        value ="CÔNG KHAI"
       }
-      else if(status == 1){
+      else {
         color = "gray"
-        value = "PENDING"
+        value = "RIÊNG TƯ"
       }
-      else{
-        color = "green"
-        value = "PUBLIC"
-      }
+
       return (
         <>
           <Tag color={color}>{value}</Tag>
@@ -70,20 +67,31 @@ const columns = [
     },
   },
   {
-    title: "Category",
-    dataIndex: "categories",
-    key: "categories",
-    render: (_, { categories }) => {
-      return categories.map((category, index) => {
-        return <Tag key={index}>{category.name}</Tag>;
+    title: "Thể loại",
+    dataIndex: "genres",
+    key: "genres",
+    render: (_, { genres }) => {
+      return genres.split(',').map((genre, index) => {
+        return <Tag key={index}>{genre}</Tag>;
       });
     },
   },
   {
-    title: "Modified Date",
-    key: "modifiedDate",
-    render: (_, { modifiedDate }) => {
-      const d = modifiedDate.split("@");
+    title: "Tags",
+    dataIndex: "moods",
+    key: "moods",
+    render: (_, { moods }) => {
+      return moods.split(',').map((moods, index) => {
+        return <Tag key={index}>{moods}</Tag>;
+      });
+    },
+  },
+  {
+    title: "Ngày phát hành",
+    key: "releasedDate",
+    render: (_, { releasedDate }) => {
+      if(!releasedDate) return <></>;
+      const d = releasedDate.includes("@") ? releasedDate.split("@") : releasedDate;
       return <>{d[0]}</>;
     },
   },
@@ -91,7 +99,7 @@ const columns = [
     title: "Action",
     key: "action",
     render: (_, record) => {
-      
+
       return (
         <Space size="middle">
           <EditSong record={record} />

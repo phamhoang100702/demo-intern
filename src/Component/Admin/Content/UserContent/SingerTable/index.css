@@ -1,0 +1,16 @@
+.pagination{
+    font-size: 20px;
+    margin-top: 20px;
+}
+
+.table-user{
+    margin: 10px;
+    padding: 10px;
+}
+.row-table{
+    display: flex;
+}
+.custom-card .ant-card-head {
+    background-color: #1890ff; /* màu xanh */
+    color: black; /* chữ trắng */
+}

@@ -1,43 +1,66 @@
-import React, { useState, useEffect } from "react";
-import ReactDOM from "react-dom";
-import { Bar } from "@ant-design/plots";
-import { getDataForChart } from "../../../../services/api/chart";
+import React, {useEffect, useState} from "react";
+import {Bar} from "@ant-design/plots";
+import {getDataChartForListen, getDataChartForSong, getDataChartForUser} from "../../../../services/api/chart";
+import {NewSongTable} from "./NewSongs";
 
 export const Chart = () => {
-  const [data, setData] = useState([]);
+    const [data, setData] = useState([]);
 
-  useEffect(() => {
-    asyncFetch();
-  }, []);
+    useEffect(() => {
+        asyncFetch();
+    }, []);
 
-  const asyncFetch = () => {
-    (async () => {
-      // const data = await getDataForChart(10);
-      //
-      // setData([...data.content]);
-      setData([])
-    })();
-  };
-  const config = {
-    data,
-    xField: "date",
-    yField: "times",
-    seriesField: "type",
-    isGroup: "true",
-    color : ['#E24617','#7A7EAF','#CD2562','#DFF51A'],
-    colorField: ({type})=>{
-      if(type=='SONG') return 'SONG'
-      else if(type=='SINGER') return 'SINGER'
-      else if(type=='LISTENS') return 'LISTENS'
-      else return 'USER'
-    },
-    columnStyle: {
-      radius: [20, 20, 0, 0],
-    },
-    size : "large",
+    const asyncFetch = () => {
+        (async () => {
+            try {
+                const responseSong = await getDataChartForSong();
+                const responseListen = await getDataChartForListen();
+                const responseUser = await getDataChartForUser();
+                const transformData = (response, type) => {
+                    return response?.map(item => ({
+                        date: item.date,
+                        times: item.count, // hoặc item.times tuỳ backend bạn trả về
+                        type: type
+                    })) || [];
+                };
 
-  };
+                const songData = transformData(responseSong.content, 'SONG');
+                const listenData = transformData(responseListen.content, 'LISTENS');
+                const userData = transformData(responseUser.content, 'USER');
+                const combinedData = [...songData, ...listenData, ...userData];
+                combinedData.sort((a, b) => new Date(a.date) - new Date(b.date));
+                setData(combinedData);
 
-  return <Bar {...config}
-  />;
+                //
+                // setData([...data.content]);
+            } catch (e) {
+
+            }
+
+        })();
+    };
+    const config = {
+        data,
+        xField: "date",
+        yField: "times",
+        seriesField: "type",
+        isGroup: true,
+        height: 600, // 👈 Thêm dòng này
+        color: ['#E24617', '#7A7EAF', '#CD2562', '#DFF51A'],
+        colorField: ({type}) => {
+            if (type === 'SONG') return 'Bài hát mới';
+            else if (type === 'USER') return 'Người dùng mới';
+            else if (type === 'LISTENS') return 'Lượt nghe';
+        },
+        columnStyle: {
+            radius: [60, 100, 0, 0]
+        },
+        size: "large",
+    };
+
+
+    return (<div style={{width: '100%', height: '600px'}}>
+        <Bar {...config} />
+        <NewSongTable/>
+    </div>)
 };

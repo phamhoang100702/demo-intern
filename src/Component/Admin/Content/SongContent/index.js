@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom";
 import { getLocalStorage } from "../../../../services/localstorage";
 import { setAuth } from "../../../../redux/actions/auth";
 import {getUserInformation} from "../../../../services/api/user";
+import {Row} from "antd";
 
 export const OverviewSong = () => {
   const dispatch = useDispatch();
@@ -32,9 +33,17 @@ export const OverviewSong = () => {
     }
   }, []);
   return (
-    <div>
-      {/* <TopSider/> */}
-      <ListSong />
-    </div>
+      <>
+        <Row>
+          <h2>
+            Quản lý bài hát
+          </h2>
+        </Row>
+        <div>
+          {/* <TopSider/> */}
+           <ListSong />
+        </div>
+      </>
+
   );
 };

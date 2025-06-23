@@ -2,8 +2,8 @@ import React, { useEffect, useState } from "react";
 import { Button, Form, Input, Row } from "antd";
 import "react-h5-audio-player/lib/styles.css";
 import Password from "antd/es/input/Password";
-import { addUser } from "../../../../../services/api/user";
-import { registerUser } from "../../../../../services/api/auth";
+import { addUser } from "../../../../../../services/api/user";
+import { registerUser } from "../../../../../../services/api/auth";
 
 /* eslint-disable no-template-curly-in-string */
 const validateMessages = {
